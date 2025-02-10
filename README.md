@@ -1,204 +1,258 @@
-# Assignment 1
+# Assignment 1 Mailing Service
 
-1. 📝 **Worth:**   6% 
+* **Worth**: 10%
+* 📅 **Due**: February 21, 2024 @ 23:59.
+* 🕑 **Late Submissions**: Deductions for late submissions is 10%/day. 
+  *To a maximum of 3 days. A a grade of 0% will be given after 3 days.*
+* 📥**Submission**: Submit through GitHub classroom. 
+* ✅ The use of generative AI is allowed to help improve your solution. But it should not write all your assignment.
 
-2. 📅 **Due:** February 21, @Midnight
 
-3. 🕑 **Late submissions:** 10% penalty per late day. Maximum of 3 late days allowed.
 
-4. 📥 **Submission:** Upload your `.py` files on [Gradescope](https://www.gradescope.ca/courses/24982)
+## Objective
 
-### ⚠️ Important Notes:
+In this first assignment, you are tasked with creating a simple Email Client Console App with essential email functionalities. This is the first milestone, where you'll create a service class that interfaces with a mail clients to retrieve and send emails **asynchronously**. 
 
--  ✅ Collaboration is encouraged, but your work must be completed and submitted independently 
--  🚫 The use of generative AI to solve the assignment will be flagged as plagiarism.
--  📚 This assignment should be completed using only the concepts seen in class. 
+## Requirements 
 
-### 📝 Instructions:
+The Email app must:
 
-1. Extract the compressed folder and save its content to a secure location on your computer for instance, your course folder `Programming > Assignment1` saved on OneDrive.
-2. Open the parent folder `Programming` in PyCharm as usual and start coding.
-3. Use the starter files provided **WITHOUT** renaming them.
-4. All `.py` files have a multi-line comment at the top that you should complete with your name, section, etc.
-5. Any variable or constant set with a fixed value should be defined at the beginning, for example:
+- Authenticate the user
 
-```python
-"""
-Author: ...
-Date: ...
-...
-"""
-import math
+- Connect to a mail client 
 
-# Define constants 
-GRAVITAION = 9.81    # m/s2
+- Retrieve all emails in the inbox.
 
-# Define variables 
-position_x = 34     # m
-position_y = 23     # m
+- Send an email with a body, title, sender and sender email 
 
-# Calculate other variables...
+- Delete a given email.
+
+  
+
+**You do NOT have to implement:**
+
+- Detect when an email is sent (no event handlers for now)
+- Detect when a new email is received (no monitoring the server for now)
+- User interface (this will be done in the next assignment)
+
+
+
+#### Used packages
+
+- `MailKit`
+
+  
+
+### MailKit
+
+[MailKit](https://github.com/jstedfast/MailKit) developed by [Jeffrey Stedfast](https://github.com/jstedfast) and is a cross-platform mail client library which uses [MimeKit](https://github.com/jstedfast/MimeKit). It offers authentication functionality as well as emailing functionality using POP3 protocol, Imap and Smtp. It is relatively easy to use for emailing but should be adapted for the needs of your application.
+
+This Nuget package offers a variety of clients for retrieving or sending emails. In this assignment we will be using two: the`ImapClient` which uses the *imap* protocol to retrieve emails, and the `SmtpClient` which uses the *smtp* protocol to send emails. This package uses `MimeMessage` class to hold email information such as the recipients, title, subject, etc.  
+
+
+
+### Configuration
+
+To configure the clients, the following values are needed and should be encapsulated in a  `MailConfig` class. 
+
+- Create an interface `IMailConfig` with the public properties below.
+- Create a `MailConfig` class which implements the interface
+
+**Required for authentication**
+
+- `string EmailAddress`
+- `string Password`
+
+**Retrieving service**
+
+- `string ReceiveHost` 
+- `SecureSocketOptions RecieveSocketOptions`
+- `int ReceivePort`
+
+**Sending service**
+
+- `string SendHost`
+- `int SendPort`
+- `SecureSocketOptions SendSocketOptions`
+
+**Optional properties for OAuth 2.0**
+
+- `string` `OAuth2ClientId` 
+- `string` `OAuth2ClientSecret`
+- `public` string `OAuth2RefreshToken` 
+
+
+
+- In the main program, create an instance of the config while setting the values based on the tested mailing host setup in the next section.  
+
+### Testing setup - Gmail
+
+- Create a dummy email address on outlook:
+
+  - Go to [Google  Create Personal Account](https://accounts.google.com/lifecycle/steps/signup/name?continue=http://support.google.com/mail/answer/56256?hl%3Den&ddm=1&dsh=S153843380:1739140042697886&ec=GAZAdQ&flowEntry=SignUp&flowName=GlifWebSignIn&hl=en&ifkv=ASSHykpUGKLOQQZoOowATSzzMO5TYvzJctLuXcX5wodwxYjW5Ic3RPthDBq_2r_cWlpFZb_tDu76oQ&TL=ADgdZ7TVI_5hSfHFkSP4hAQKmqakwXKAxHwR-GGsO_IJipD3-BGJwtEpgmI-N00r)
+
+  - Click Create free personal account
+
+  - Create a new email address
+
+  - Create a new password that you can easily remember
+
+  - Fill in the first name, last name
+
+- Generate a password for the App 
+
+  - Visit the Google Account settings.
+
+  - Select the “Security” tab.
+
+  - Under the “Signing in to Google” section, click on “2-Step Verification” and follow the prompts to enable it.
+  - After enabling two-step verification, search for “App Passwords”. You may be asked to re-enter your password.
+  - Create a new app, call it "EmailConsoleApp"
+  - Copy the 16-character password that is generated into your code. This is the password you should use to test the email client instead of the Google password created earlier.
+
+- Based on [Google's settings for IMAP and SMTP Protocols](https://developers.google.com/gmail/imap/imap-smtp), here are the config values:
+
+  | Config value   | Value                        |
+  | -------------- | ---------------------------- |
+  | `ImapHost`     | "imap.gmail.com"             |
+  | `ImapSocket`   | `SslOnConnect`               |
+  | `ImapPort`     | 993                          |
+  | `SmptHost`     | "smtp-mail.outlook.com"      |
+  | `SmtpSocket`   | `StartTls` or `SslOnConnect` |
+  | `SmtpPort`     | 587 (TLS), 465(SSL)          |
+  | `EmailAddress` | dummy email created for this |
+  | `Password`     | dummy password               |
+
+# `EmailService`
+
+In this part of the assignment, you must implement a class called `EmailService` which provide the basic functionalities described earlier: connecting and authenticating, sending, retrieving all emails, deleting an email. Here is the interface it must implement:
+
+```csharp
+public interface IEmailService
+{
+    	// Connection and authentication
+        Task StartSendClientAsync();
+        Task DisconnectSendClientAsync();
+        Task StartRetreiveClientAsync();
+        Task DisconnectRetreiveClientAsync();
+		
+    	// Emailing functionality
+        Task SendMessageAsync(MimeMessage message);
+        Task<IEnumerable<MimeMessage>> DownloadAllEmailsAsync();
+        Task DeleteMessageAsync(int uid);
+
+}
 ```
 
+Your implementation should be flexible enough to allow **OAuth 2.0** to be integrated in future iterations of this project as well as using other protocols. Here are a few guidelines to help you with the implementation.
 
-## 🎯 Learning Objectives
+### Authentication
 
-- Develop Python scripts using the PyCharm IDE.
+Most mailing services now require **OAuth 2.0** to email access, which involves registering the app with a developer account. However, for simplicity and testing purposes, we will only use **basic authentication** with the generated password. 
 
-- Identify and correct errors in Python code.
+Your design should be flexible enough to allow **OAuth 2.0** to be integrated in future iterations of this project.
 
-- Solve simple arithmetic and logic problems using Python. 
+**Requirements:**
 
-- Declare and use Python variables while following naming conventions.
+- Before implementing your class, review the following OAuth 2.0 examples:
 
-- Choose the appropriate numeric data types & arithmetic operators based on the problem.
+  📌 [OAuth2 Gmail Example](https://github.com/jstedfast/MailKit/blob/master/Documentation/Examples/OAuth2GMailExample.cs)
+  📌 [OAuth2 Exchange Example](https://github.com/jstedfast/MailKit/blob/master/Documentation/Examples/OAuth2ExchangeExample.cs)
 
-- Utilize the `math` module to perform mathematical operations.
+- You can authenticate the send and receive client using a similar code: 
 
----
+  ```csharp
+  client.Connect(host, port, socket);
+  client.Authenticate(email, generatedPassword);
+  ```
 
-### Question 1: Fix Errors 🛠️
+- Handle **all exceptions** and print error messages to the console.
 
-Fix the code in the starter file `fix_mistakes.py` so that it behaves the way it ought to (the way the program ought to work is defined in the code).
+- You must do so asynchronously
 
-### Question 2: OMA's 👵🥮
+- Before connecting or authenticating, always verify the state of the `client` to prevent issues:
 
-You own a bakery which makes [OMA'S BOTERKOEK](https://www.food.com/recipe/omas-boterkoek-dutch-buttercake-132488) (Grandma's butter-cake)
+  - `IsConnected`: Checks if the client is currently connected to the server.
+  - `IsAuthenticated`: Checks if the client is successfully authenticated.
 
-* You can only buy butter in 1kg containers.
+- When done using a client, it should be disconnected using similar code:
 
-* You can only buy brown sugar in 25kg bags
+  ```csharp
+  client.Disconnect(true);
+  ```
 
-* You can only buy eggs in 5 dozen containers
+**Testing**
 
-* You can only buy flour in 25kg bags
+- Create an instance of the class in the `Main()`
+- Ensure that the connection to the clients are not throwing exceptions, but if they do, the exception should be handled. 
 
-* You can only buy almond extract in 5kg bottles.
-* You can only buy baking powder in 1kg bags
+### Sending emails
 
-Currently, you have no ingredients in stock.
+A sending client must be **connected and authenticated** before sending emails. Sending clients all implement the `MailKit.IMailTransport` interface.
 
-The recipe for one cake is:
+For reference, here’s a sample code snippet for sending an email using SMTP:
+📌 [Sending Messages with SMTP](https://github.com/jstedfast/MailKit?tab=readme-ov-file#sending-messages)
 
-* 160 g butter
-* 240g brown sugar
-* 7.5g almond extract
-* 1egg
-* 355g flour
-* 2.5g baking powder 
+**Requirements:**
 
- Add comments in the code to keep track of the units of measurements for each variable.
+- Implement the following methods to send emails of type `MimeMessage`:
+  - `SendMessageAsync()`
+- Your solution must **handle exceptions** and **log any errors** to the console.
 
-Write a script which uses the number of cakes needed and:
+**Testing**
 
-* Calculates how many containers of each ingredient you need to buy
-* Prints those values:
+Call the method in the `Main()` and send yourself an email. 
 
+### Downloading and deleting 
 
-**Example**:
+A retrieving client must also be **connected** to the email provider's server and **authenticated** before using it. These clients all implement the `MailKit.IMailStore` interface.
 
-```text
-To make 100 butter cakes, you need to buy:
-16 containers of butter
-1 bags of sugar
-1 bottle of almond extract
-2 cartons of eggs
-2 bags of flour
-1 containers of baking powder
-```
+For reference, here’s a sample code snippet for retrieving emails using IMAP:
+📌 [Retrieving Emails with IMAP](https://github.com/jstedfast/MailKit?tab=readme-ov-file#using-imap)
 
-> To ensure your code works, change the values of the variables in the code see if your calculation works properly.  Do this again and again until you are satisfied that your code works for any values
+**Instructions**
 
-___
+- Implement the following method to retrieve emails from the `Inbox` folder:
 
+  - `DownloadAllEmailsAsync()`
 
+- Your solution must **handle exceptions** and **log any errors** to the console.
 
+  
 
+- `Inbox`: A default `MailFolder` that exists on any server
 
-### Question 3:  Jac Hacks 🐱‍💻
+  - `GetMessageAsync(UniqueId)` is the method to use to download an email. 
+  - This UniqueId is useful for deleting emails at a later point.
 
-The Computer Science department is organizing this year's Hackathon and needs your help with some logistics. They are currently assigning workspaces for each team participating in the hackathon. There are workspaces of various sizes:
+**Testing**
 
-- Large - accommodates 4 teams 
-- Medium - accommodates 2 teams
-- Small  - accommodates 1 team 
+Call the method in the `Main()` and display the title, subject and date of the retrieved emails. Compare with the list of emails in the Gmail app. 
 
-To optimize space usage, the organizers want to minimize the number of partially filled workspaces. For example if there are 11  teams, they should be assigned 2 large spaces, 1 medium space and 1 small. But if there are 12 teams, they should use 3 large spaces.
+## Deleting emails
 
+As for downloading emails, the retrieve client should be connected and authenticated before deleting an email. To do so, the email is marked as "Deleted", but will not be deleted until the folder is expunged. 
 
-If the number of participants doesn't divide evenly by the team size, assume that some teams will have extra members, but no additional team will be formed.
+For reference, here’s a sample code snippet:
 
-Given the total number of registered participants `num_participants` and the number of participants per team `team_size`, your script must:
+📌 [Deleting Emails with IMAP](https://github.com/jstedfast/MailKit?tab=readme-ov-file#deleting-messages-in-imap)
 
-- Calculate the number of teams formed
-- Calculate the number of large, medium and small workspaces required.
-- Print the number of participants, the team size
-- Print the number of teams
-- Print the number of large, medium and small workspaces
+**Instructions:** 
+
+- Implement the following methods to delete an email from the `Inbox` folder:
+  - `DeleteMessageAsync()`
+- You must open the Inbox in Read-Write mode first.
+- The `Uid` represents the value of the unique Id assigned by the Imap server when an email appears in a folder.  
+- You don't need to worry about this for now, you can simply delete the message with Unique Id 1 to test it out and ensure you have a few emails in the mail box.
 
 
-**Output Example**
 
-```text
-Num participants:  123
-Team size:  3
-Total number of teams:  41
-Large workspace(s):  10
-Medium workspace(s):  0
-Small workspace(s):  1
-```
+# Rubric
 
-> To ensure your code works, change the values of the variables in the code see if your calculation works properly.  Do this again and again until you are satisfied that your code works for any values
-
-___
-
-### Question 4: JAC Parking 🚘
-
-John Abbott College needs your help in estimating the number of parking decals that will be sold this semester for both staff and students. The script should be designed to be as flexible as possible for reuse in future semesters.
-
-For Winter 2025, there are 8,000 full-time students enrolled in the day division, with 2% expected to drive and park at the college. The estimated teacher-to-student ratio is 1:30, among all teachers 65% commute by car.Additionally, there are 378 full-time staff members, 80% of whom drive to work. Since these values may change each semester, the script should be adaptable. 
-
-The John Abbott campus has a fixed number of parking spaces: 
-
-- **346** spots reserved for staff
-- **555** designated for students
-
-> This excludes disabled parking, carpooling reserved parking, which can be ignored in this problem. 
-
-Write a script which:
-
-- Determines the number of student and staff parking decals to be sold.
-- Computes the occupancy rate (in %) for both the student and staff parking lots (including teachers and staff).
-- Rounds up to whole values using the `round()` function
-- Prints all decimal values with a precision of 2.
-
-**Example of output**
-
-```text
-|----Decals to sell ---|
-| Student     |  160  |
-| Teacher     |  173  |
-| Staff       |  302  |
-```
-
-```text
-|----Occupancy Rate (%)------|
-| Student parking |   28.83% |
-| Staff parking   |  137.28% |
-```
-
-> To ensure your code works, change the values of the variables in the code see if your calculation works properly.  Do this again and again until you are satisfied that your code works for any values
-
-___
-
-## Rubric
-
-| Criteria   | Expectation                                                  | Points |
-| ---------- | ------------------------------------------------------------ | ------ |
-| Logic      | Correct translation of a word problem into logical steps to accomplished the required task. The logic must be as generalized as possible, avoiding the use of magical values and hardcoded strings. | 1.5    |
-| Variables  | Proper use of variables to break down a problem. Use of meaningful variable names when possible. | 1      |
-| Comments   | Proper use of comments to explain the logic of a program. All files contain a header with the student's information and a brief description of the script. | 0.5    |
-| Data Types | Proper understanding of numeric data types and correct use of conversion functions. | 1      |
-| Operators  | Proper understanding and correct use of arithmetic operators. | 1      |
-
-> The ponderation of each criteria may change for each problem. 
+| Criteria      | Explanation                                                  | Points |
+| ------------- | ------------------------------------------------------------ | ------ |
+| Functionality | The Console App provides all the basic emailing functionalities required in this assignment | 5      |
+| Modularity    | The service class is designed to be flexible and easily extended if needed. | 5      |
+| Async         | All service classes are implemented using asynchronous calls | 10     |
+| Code Quality  | Error handling and robustness                                | 10     |
+| Coding Style  | Use of comments. </br>Use of naming conventions. </br> Avoid the use of magic strings within the classes definition. | 5      |
