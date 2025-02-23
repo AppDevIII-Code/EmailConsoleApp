@@ -1,10 +1,16 @@
-﻿namespace EmailConsoleApp
+﻿using MailKit.Net.Imap;
+using MailKit.Net.Smtp;
+
+namespace EmailConsoleApp
 {
     internal class Program
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            var config = new MailConfig() { ReceiveHost = "", SendHost = "", Email = "", Password = "" };
+            var sendClient = new SmtpClient();
+            var receiveClient = new ImapClient();
+            var service = new EmailService(sendClient, receiveClient, config);
         }
     }
 }
