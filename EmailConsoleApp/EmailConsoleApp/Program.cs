@@ -7,7 +7,7 @@ namespace EmailConsoleApp
     {
         static void Main(string[] args)
         {
-            var config = new MailConfig() { ReceiveHost = "", SendHost = "", Email = "", Password = "" };
+            var config = new MailConfig() { ReceiveHost = "", SendHost = "", EmailAddress = "", Password = "" };
             var sendClient = new SmtpClient();
             var receiveClient = new ImapClient();
             var service = new EmailService(sendClient, receiveClient, config);

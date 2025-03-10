@@ -11,7 +11,7 @@ namespace EmailConsoleApp
         Task DisconnectReceiveClient();
 
         Task SendMessageAsync(MimeMessage message);
-        Task<IEnumerable<MimeMessage>> DownloadAllEmailsAsync();
+        Task<IEnumerable<MimeMessage>?> DownloadAllEmailsAsync();
 
         Task DeleteMessageAsync(int uid);
 

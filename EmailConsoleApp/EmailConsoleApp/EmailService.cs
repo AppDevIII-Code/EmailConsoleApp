@@ -1,17 +1,21 @@
 ﻿using MailKit;
-using MailKit.Net.Imap;
 using MimeKit;
 
 
 namespace EmailConsoleApp
 {
+    /// <summary>
+    /// Class <c>EmailService</c> provides the implementation of the IEmailService interface to send and 
+    /// receive messages from a mailing service using the MailKit and MimeKit libraries. 
+    /// </summary>
     public class EmailService : IEmailService
     {
+
         IMailConfig _config;
         IMailTransport _sendClient;
         IMailStore _receiveClient;
 
-        // Constructor
+        #region CONSTRUCTOR
         public EmailService(IMailTransport sendClient, IMailStore imapClient, IMailConfig config) 
         { 
             _config = config;
@@ -20,6 +24,8 @@ namespace EmailConsoleApp
            
         }
 
+        #endregion
+        #region CONNECTION AND AUTHENTICATION
         public async Task StartSendClientAsync()
         {
             try
@@ -30,15 +36,15 @@ namespace EmailConsoleApp
                 }
                 if (!_sendClient.IsAuthenticated)
                 {
-                    await _sendClient.AuthenticateAsync(_config.Email, _config.Password);
+                    await _sendClient.AuthenticateAsync(_config.EmailAddress, _config.Password);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
-        }
 
+        }
         public async Task StartReceiveClientAsync()
         {
             try
@@ -49,7 +55,7 @@ namespace EmailConsoleApp
                 }
                 if (!_receiveClient.IsAuthenticated)
                 {
-                    await _receiveClient.AuthenticateAsync(_config.Email, _config.Password);
+                    await _receiveClient.AuthenticateAsync(_config.EmailAddress, _config.Password);
                 }
             }
             catch (Exception ex)
@@ -60,8 +66,10 @@ namespace EmailConsoleApp
         }
         public async Task DisconnectSendClientAsync() => await _sendClient.DisconnectAsync(true);
         public async Task DisconnectReceiveClient() => await _receiveClient.DisconnectAsync(true);
-        
-        public async Task<IEnumerable<MimeMessage>> DownloadAllEmailsAsync()
+
+        #endregion
+        #region EMAILING FUNCTIONALITIES
+        public async Task<IEnumerable<MimeMessage>?> DownloadAllEmailsAsync()
         {
             try
             {
@@ -83,27 +91,55 @@ namespace EmailConsoleApp
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                return new List<MimeMessage>();
+                return null;
+            }
+            finally
+            {
+                await DisconnectSendClientAsync();
             }
         }
 
+
         public async Task SendMessageAsync(MimeMessage message)
         {
-            await StartSendClientAsync();
-            await _sendClient.SendAsync(message);
-            await DisconnectReceiveClient();
+            try
+            {
+                await StartSendClientAsync();
+                await _sendClient.SendAsync(message);
+                await DisconnectReceiveClient();
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"Error sending message {ex.Message}");
+            }
+            finally
+            {
+                await DisconnectSendClientAsync();
+            }
         }
 
         public async Task DeleteMessageAsync(int uid)
         {
-            await StartReceiveClientAsync();
-            var inbox = _receiveClient.Inbox;
-            await inbox.OpenAsync(FolderAccess.ReadWrite);
-            var deleteRequest = new StoreFlagsRequest(StoreAction.Add, MessageFlags.Deleted) { Silent = true };
-            await inbox.StoreAsync(uid, deleteRequest);
-            await inbox.ExpungeAsync();
-            await DisconnectReceiveClient();
+            try
+            {
+                await StartReceiveClientAsync();
+                var inbox = _receiveClient.Inbox;
+                await inbox.OpenAsync(FolderAccess.ReadWrite);
+                var deleteRequest = new StoreFlagsRequest(StoreAction.Add, MessageFlags.Deleted) { Silent = true };
+                await inbox.StoreAsync(uid, deleteRequest);
+                await inbox.ExpungeAsync();
+                await DisconnectReceiveClient();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting message {ex.Message}");
+            }
+            finally
+            {
+                await DisconnectReceiveClient();
+            }
         }
-        
+
+        #endregion
     }
 }
