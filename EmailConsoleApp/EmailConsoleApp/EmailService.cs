@@ -16,11 +16,11 @@ namespace EmailConsoleApp
         IMailStore _receiveClient;
 
         #region CONSTRUCTOR
-        public EmailService(IMailTransport sendClient, IMailStore imapClient, IMailConfig config) 
+        public EmailService(IMailTransport sendClient, IMailStore receiveClient, IMailConfig config) 
         { 
             _config = config;
             _sendClient = sendClient;
-            _receiveClient = imapClient;
+            _receiveClient = receiveClient;
            
         }
 
